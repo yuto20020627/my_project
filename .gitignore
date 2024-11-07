@@ -1,3 +1,41 @@
 echo '.idea/' >> .gitignore
 .DS_Store
 .idea/
+# Macのシステムファイル
+.DS_Store
+.AppleDouble
+.Spotlight-V100
+.Trashes
+._*
+
+# Windowsのシステムファイル
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Pythonの仮想環境ディレクトリ（例: venv）
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# PyCharmの設定ファイル
+.idea/
+# デフォルトの無視対象ファイル
+/shelf/
+/workspace.xml
+# エディターベースの HTTP クライアントリクエスト
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+.idea/vcs.xml
+.DS_Store
+.idea/
+# Macのシステムファイル
+.DS_Store
+.AppleDouble
+.Spotlight-V100
+.Trashes
+._*
