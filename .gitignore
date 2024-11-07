@@ -1,1 +1,3 @@
 echo '.idea/' >> .gitignore
+.DS_Store
+.idea/
