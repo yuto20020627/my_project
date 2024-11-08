@@ -1,12 +1,17 @@
 import cv2
-import numpy as np
+import numpy as np  # numpy　列の数値計算
+from flask import Flask, render_template, jsonify  # render_template, jsonify の修正
+import threading
+
+# Flaskアプリケーションのセットアップ
+app = Flask(__name__)
 
 # 動画の読み込みまたはカメラを起動
 cap = cv2.VideoCapture('video/ScreenRecording_10-25-2024 15-45-20_1.mov')
 
 # 最初のフレームを背景モデルとして取得
-ret, background = cap.read()
-if not ret:
+ret, background = cap.read()  # ret　正常に動画を読み込めたか background 動画を格納
+if not ret:  # ret == False
     print("Failed to capture background")
     cap.release()
     exit()
@@ -15,74 +20,103 @@ if not ret:
 background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
 
 # 設定
-min_duration_frames = 5  # 1秒間（フレームレートが30FPSの場合）
-min_contour_area = 10 * 10  # 最小の検出面積（50x50ピクセル）
+min_duration_frames = 30  # 1秒間（フレームレートが30FPSの場合）
+min_contour_area = 10 * 10  # 最小の検出面積（10x10ピクセル）
 
 # 検出したエリアを保持するための辞書
-detected_areas = {}
+detected_areas = {}  # キーとして(x,y,w,h)を持ち、値として何フレーム検出したかを持つx,yは左上の座標、wは幅、hは高さ
 
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
+# 最も右側のX座標を初期化
+max_right_x = 0
 
-    # 現在のフレームをグレースケール化
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+# 動画出力の設定
+fourcc = cv2.VideoWriter_fourcc(*'XVID')  # 出力動画のフォーマット
+out = cv2.VideoWriter('output_with_line.avi', fourcc, 30.0, (int(cap.get(3)), int(cap.get(4))))
 
-    # 背景との差分を計算
-    diff = cv2.absdiff(background, gray_frame)
+# バス待ち時間ページの情報を定期的に更新
+def process_video():
+    global max_right_x
+    while cap.isOpened():  # 動画が開かれているか
+        ret, frame = cap.read()  # 動画からフレームを1つ読み込む関数
+        if not ret:  # ret == False
+            break
 
-    # 差分画像を二値化（しきい値を設定して、前景と背景を区別）
-    _, fg_mask = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+        # 現在のフレームをグレースケール化
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # ノイズ除去（小さいブロブを除去）
-    fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+        # 背景と現在のフレームとの差分を計算
+        diff = cv2.absdiff(background, gray_frame)
 
-    # 輪郭抽出
-    contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # 差分画像を二値化（しきい値を設定して、前景と背景を区別）しきい値３０以上を白（２５５）、以下を黒（０）
+        _, fg_mask = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
 
-    # 最も右側のX座標を初期化
-    max_right_x = 0
+        # ノイズ除去（小さいブロブを除去）モロフォジー変換
+        fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
-    # 各輪郭をループ処理
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        area = w * h
+        # 輪郭抽出
+        contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 面積が閾値以上の場合
-        if area > min_contour_area:
-            # エリアが辞書に存在しない場合、新規に追加
-            if (x, y, w, h) not in detected_areas:
-                detected_areas[(x, y, w, h)] = 1
-            else:
-                # フレームカウントを増加
-                detected_areas[(x, y, w, h)] += 1
+        max_right_x_local = 0
+        # 各輪郭をループ処理
+        for cnt in contours:
+            x, y, w, h = cv2.boundingRect(cnt)  # 最小の外接矩形を計算
+            area = w * h
 
-            # 継続フレーム数が閾値を超えた場合
-            if detected_areas[(x, y, w, h)] >= min_duration_frames:
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # 面積が閾値以上の場合
+            if area > min_contour_area:
+                if (x, y, w, h) not in detected_areas:
+                    # そのエリアが新たに検出された場合、新規に追加
+                    detected_areas[(x, y, w, h)] = 1
+                else:
+                    # 既に存在する場合はフレーム数を増加
+                    detected_areas[(x, y, w, h)] += 1
 
-            # 右端のX座標を更新
-            right_x = x + w
-            if right_x > max_right_x:
-                max_right_x = right_x
+                # 継続フレーム数が閾値を超えた場合
+                if detected_areas[(x, y, w, h)] >= min_duration_frames:
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # 緑色の矩形を描画
 
-    # 検出エリアが閾値を満たさない場合はリセット
-    for key in list(detected_areas.keys()):
-        if detected_areas[key] < min_duration_frames:
-            detected_areas[key] = 0
+                # 右端のX座標を更新,縦線を引くため
+                right_x = x + w
+                if right_x > max_right_x_local:
+                    max_right_x_local = right_x
+        # max_right_xの値を更新
+        max_right_x = max_right_x_local
 
-    # 最も右側のX座標に基づいて縦線を描画
-    if max_right_x > 0:
-        cv2.line(frame, (max_right_x, 0), (max_right_x, frame.shape[0]), (255, 0, 0), 2)
+        # 最も右側のX座標に基づいて縦線を描画
+        if max_right_x > 0:
+            cv2.line(frame, (max_right_x, 0), (max_right_x, frame.shape[0]), (255, 0, 0), 2)  # 元のフレームに青線を描画
+            cv2.line(fg_mask, (max_right_x, 0), (max_right_x, fg_mask.shape[0]), (255, 0, 0), 2)  # 前景マスクに青線を描画
 
-    # 結果の表示
-    cv2.imshow('Foreground Mask', fg_mask)
-    cv2.imshow('Original Video with Detection', frame)
+        # 動画として出力
+        out.write(frame)  # フレームを動画として保存
 
-    # ESCキーで終了
-    if cv2.waitKey(30) & 0xFF == 27:
-        break
+        # 結果の表示（オプションでfg_maskを表示する場合）
+        # cv2.imshow('Foreground Mask', fg_mask)
+        # cv2.imshow('Original Video with Detection', frame)
 
-cap.release()
-cv2.destroyAllWindows()
+        # ESCキーで終了
+        if cv2.waitKey(30) & 0xFF == 27:
+            break
+
+    # 動画キャプチャを解放し、OpenCVウィンドウを閉める
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+# バス待ち時間の情報をJSON形式で返す
+@app.route('/get_bus_time')
+def get_bus_time():
+    return jsonify({'line': max_right_x})
+
+# HTMLページをレンダリング
+@app.route('/')
+def index():
+    return render_template('Queue_display.html')
+
+# 動画処理を別スレッドで実行
+thread = threading.Thread(target=process_video)
+thread.daemon = True
+thread.start()
+
+if __name__ == '__main__':
+    app.run(debug=True, threaded=True)
