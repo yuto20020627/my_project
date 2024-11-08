@@ -28,8 +28,8 @@
             const now = new Date();//現在の時刻
             const line = 5;//最後尾の長さ
             const people = 10;//待ち人数
-            const busArrivalTime = new Date(now.getTime() + 5 * 60000); //到着予定時刻
-            const minutesLeft = Math.round((busArrivalTime - now) / 60000);//到着までの時間（分）
+            const busArrivalTime = new Date(now.getTime() + 5 * 60000); //到着予定時刻(5分後)
+            const minutesLeft = Math.round((busArrivalTime - now) / 60000);//到着までの時間（分）（5分後）
             //Math.round(小数点以下を切り捨て)
 
             // 表示を更新
