@@ -1,4 +1,4 @@
-import cv2#qqq
+import cv2
 import numpy as np  # numpy　列の数値計算
 from flask import Flask, render_template, jsonify  # render_template, jsonify の修正
 import threading
