@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>バスの待ち時間表示</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+         #bus-time, #now-time, #expectation-time, #people, #line {
+            font-size: 24px;
+                color: #333;
+                font-family: monospace; /* 等幅フォント */
+                width: 800px;           /* 固定幅 */
+                margin-left: 450px;     /* 左マージン */
+                text-align: left;       /* 左揃え */
+            }
+    </style>
+
+     <!-- JavaScriptの追加: バス待ち時間の更新機能 -->
+    <script>
+        function updateBusTime() {
+            // 現在の時間を取得して待ち時間を計算
+
+             // Pythonからのデータを取得
+            fetch('/get_bus_time')
+                .then(response => response.json())
+                .then(data => {
+                    const line = data.line;//縦線のX座標
+
+                    const now = new Date();//現在の時刻
+                    const people = Math.round(line / 10);//待ち人数line/10
+                    const busArrivalTime = new Date(now.getTime() + 5 * 60000); //到着予定時刻(5分後)
+                    const minutesLeft = Math.round((busArrivalTime - now) / 60000);//到着までの時間（分）（5分後）
+                    //Math.round(小数点以下を切り捨て)
+
+                    // 表示を更新
+                    document.getElementById("now-time").textContent = "現在の時刻 " + now.toLocaleTimeString();
+                    document.getElementById("line").textContent = "最後尾までの長さ " + line + "ピクセル";
+                    document.getElementById("people").textContent = "並んでいる予想人数 " + people + "人";
+                    document.getElementById("expectation-time").textContent = "バスの到着予想時刻 " + "知らん、時刻表で確認してください";
+                    document.getElementById("bus-time").textContent = "バスが来るまで " + minutesLeft + " 分";
+                    //toLocaleTimeString()時刻のみを表示
+                });
+        }
+
+        // ページがロードされた時と1秒ごとに更新
+        window.onload = updateBusTime;
+        setInterval(updateBusTime, 1000);//1,000ミリ＝1秒ごとに実行
+    </script>
+</head>
+
+<body>
+     <h1>バスの待ち時間表示</h1>
+     <div id="now-time">現在の時刻を表示中です...</div>
+      <div id="line">最後尾を検出中です...</div>
+     <div id="people">待ち人数を計算中です...</div>
+     <div id="expectation-time">バスの到着時刻を計算中です...</div>
+     <div id="bus-time">バスが来るまでの待ち時間を計算中です...</div>
+
+</body>
+</html>
