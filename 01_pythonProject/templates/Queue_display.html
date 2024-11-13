@@ -11,13 +11,13 @@
             text-align: center;
             margin-top: 50px;
         }
-         #bus-time, #now-time, #expectation-time, #people, #line {
-            font-size: 24px;
-                color: #333;
-                font-family: monospace; /* 等幅フォント */
-                width: 800px;           /* 固定幅 */
-                margin-left: 450px;     /* 左マージン */
-                text-align: left;       /* 左揃え */
+         #now-time, #line, #people,#expectation-time, #bus-time, #bus-number {
+             font-size: 24px;
+             color: #333;
+             font-family: monospace; /* 等幅フォント */
+             width: 800px;           /* 固定幅 */
+             margin-left: 450px;     /* 左マージン */
+             text-align: left;       /* 左揃え */
             }
     </style>
 
@@ -36,7 +36,8 @@
                     const people = Math.round(line / 10);//待ち人数line/10
                     const busArrivalTime = new Date(now.getTime() + 5 * 60000); //到着予定時刻(5分後)
                     const minutesLeft = Math.round((busArrivalTime - now) / 60000);//到着までの時間（分）（5分後）
-                    //Math.round(小数点以下を切り捨て)
+                    const number = Math.ceil(people / 30);//バス1台を３０人として計算.小数点以下切り上げ
+                    //Math.round(小数点以下を四捨五入)
 
                     // 表示を更新
                     document.getElementById("now-time").textContent = "現在の時刻 " + now.toLocaleTimeString();
@@ -44,6 +45,7 @@
                     document.getElementById("people").textContent = "並んでいる予想人数 " + people + "人";
                     document.getElementById("expectation-time").textContent = "バスの到着予想時刻 " + "知らん、時刻表で確認してください";
                     document.getElementById("bus-time").textContent = "バスが来るまで " + minutesLeft + " 分";
+                    document.getElementById("bus-number").textContent = "あなたが乗れるバスまで " + number + " 台";
                     //toLocaleTimeString()時刻のみを表示
                 });
         }
@@ -57,10 +59,11 @@
 <body>
      <h1>バスの待ち時間表示</h1>
      <div id="now-time">現在の時刻を表示中です...</div>
-      <div id="line">最後尾を検出中です...</div>
+     <div id="line">最後尾を検出中です...</div>
      <div id="people">待ち人数を計算中です...</div>
      <div id="expectation-time">バスの到着時刻を計算中です...</div>
      <div id="bus-time">バスが来るまでの待ち時間を計算中です...</div>
+     <div id="bus-number">バスに乗れるまでの台数を計算中です...</div>
 
 </body>
 </html>
