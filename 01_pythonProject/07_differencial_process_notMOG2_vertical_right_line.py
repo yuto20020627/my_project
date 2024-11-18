@@ -1,4 +1,4 @@
-#動画からHTML表示、MOG2を使わない、元フレーム、前景マスクを表示
+#動画からHTML表示、MOG2を使わない、元フレーム、前景マスクを表示 一番右側の人に線
 import cv2
 import numpy as np  # numpy　列の数値計算
 from flask import Flask, render_template, jsonify  # render_template, jsonify の修正
@@ -8,7 +8,7 @@ import threading
 app = Flask(__name__)
 
 # 動画の読み込みまたはカメラを起動
-cap = cv2.VideoCapture('video/ScreenRecording_10-25-2024 15-45-20_1.mov')
+cap = cv2.VideoCapture('video/IMG_2435_1.MOV')
 
 # 最初のフレームを背景モデルとして取得
 ret, background = cap.read()  # ret　正常に動画を読み込めたか background 動画を格納
@@ -22,7 +22,7 @@ background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
 
 # 設定
 min_duration_frames = 30  # 1秒間（フレームレートが30FPSの場合）
-min_contour_area = 10 * 10  # 最小の検出面積（10x10ピクセル）
+min_contour_area = 65 * 65  # 最小の検出面積（10x10ピクセル）
 
 # 検出したエリアを保持するための辞書
 detected_areas = {}  # キーとして(x,y,w,h)を持ち、値として何フレーム検出したかを持つx,yは左上の座標、wは幅、hは高さ

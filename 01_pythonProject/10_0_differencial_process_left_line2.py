@@ -1,4 +1,5 @@
 #動画からHTML表示、MOG2を使わない、元フレーム、前景マスクを表示、一番左の人に縦線、画像をバスの待ち列
+#09のプログラムを簡単にする
 import cv2
 import numpy as np  # numpy　列の数値計算
 from flask import Flask, render_template, jsonify  # render_template, jsonify の修正
@@ -7,8 +8,8 @@ import threading
 # Flaskアプリケーションのセットアップ
 app = Flask(__name__)
 
-# 動画の読み込みまたはカメラを起動
-cap = cv2.VideoCapture('video/IMG_2435.MOV')
+# 動画の読み込み
+cap = cv2.VideoCapture('video/IMG_2420.MOV')
 
 # 最初のフレームを背景モデルとして取得
 ret, background = cap.read()  # ret　正常に動画を読み込めたか background 動画を格納
@@ -20,18 +21,18 @@ if not ret:  # ret == False
 # グレースケール化（差分計算を簡単にするため）
 background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
 
-# 設定
-min_duration_frames = 30  # 1秒間（フレームレートが30FPSの場合）
-min_contour_area = 10 * 10  # 最小の検出面積（10x10ピクセル）
+# 検出物体の大きさ
+min_duration_frames = 30  # 1秒間（フレームレートが30FPSの場合、初期値：30）
+min_contour_area = 1 * 1  # 最小の検出面積（初期値：10x10ピクセル）
 
 # 検出したエリアを保持するための辞書
 detected_areas = {}  # キーとして(x,y,w,h)を持ち、値として何フレーム検出したかを持つx,yは左上の座標、wは幅、hは高さ
 
 # 動画出力の設定
 fourcc = cv2.VideoWriter_fourcc(*'XVID')  # 出力動画のフォーマット
-out = cv2.VideoWriter('output_with_line.avi', fourcc, 30.0, (int(cap.get(3)), int(cap.get(4))))
+out = cv2.VideoWriter('output_with_line.avi', fourcc, 30.0,(int(cap.get(3)*3), int(cap.get(4)*3)) )
 
-#動画のフレームの幅(3)、高さ(4)を設定
+#動画のフレームの幅(3)、高さ(4)を設定、出力
 min_left_x = cap.get(3)
 height = cap.get(4)
 print('幅：' + str(min_left_x) + '高さ：' + str(height))
@@ -87,15 +88,15 @@ def process_video():
 
         # 最も左側のX座標に基づいて縦線を描画
         if min_left_x < cap.get(3):
-            cv2.line(frame, (int(min_left_x), 0), (int(min_left_x), frame.shape[0]), (255, 0, 0), 2)  # 元のフレームに青線を描画
+            cv2.line(resized_frame, (int(min_left_x), 0), (int(min_left_x), frame.shape[0]), (255, 0, 0), 2)  # 元のフレームに青線を描画
             cv2.line(fg_mask, (int(min_left_x), 0), (int(min_left_x), fg_mask.shape[0]), (255, 0, 0), 2)  # 前景マスクに青線を描画
 
         # 動画として出力
-        out.write(frame)  # フレームを動画として保存
+        out.write(resized_frame)  # フレームを動画として保存
 
         # 結果の表示（オプションでfg_maskを表示する場合）
         cv2.imshow('Foreground Mask', fg_mask)
-        cv2.imshow('Original Video with Detection', frame)
+        cv2.imshow('Original Video with Detection', resized_frame)
 
         # ESCキーで終了
         if cv2.waitKey(30) & 0xFF == 27:
