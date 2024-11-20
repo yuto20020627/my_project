@@ -1,4 +1,5 @@
 #動画からHTML表示、MOG2を使わない、元フレーム、前景マスクを表示、一番左の人に縦線、画像をバスの待ち列
+#07_differencialのleft版
 import cv2
 import numpy as np  # numpy　列の数値計算
 from flask import Flask, render_template, jsonify  # render_template, jsonify の修正
@@ -8,7 +9,7 @@ import threading
 app = Flask(__name__)
 
 # 動画の読み込みまたはカメラを起動
-cap = cv2.VideoCapture('video/IMG_2435.MOV')
+cap = cv2.VideoCapture('video/IMG_2435_1.MOV')
 
 # 最初のフレームを背景モデルとして取得
 ret, background = cap.read()  # ret　正常に動画を読み込めたか background 動画を格納
@@ -39,6 +40,7 @@ print('幅：' + str(min_left_x) + '高さ：' + str(height))
 # バス待ち時間ページの情報を定期的に更新
 def process_video():
     global min_left_x
+    # while文1フレームの処理##################################################################################
     while cap.isOpened():  # 動画が開かれているか
         ret, frame = cap.read()  # 動画からフレームを1つ読み込む関数
         if not ret:  # ret == False
@@ -60,7 +62,7 @@ def process_video():
         contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         min_left_x_local = cap.get(3) #フレーム幅を最小値
-        # 各輪郭をループ処理
+        # 各輪郭をループ処理,1フレームでcontours(検出された輪郭の数)繰り返す################
         for cnt in contours:
             x, y, w, h = cv2.boundingRect(cnt)  # 最小の外接矩形を計算
             area = w * h
@@ -71,7 +73,7 @@ def process_video():
                     # そのエリアが新たに検出された場合、新規に追加
                     detected_areas[(x, y, w, h)] = 1
                 else:
-                    # 既に存在する場合はフレーム数を増加
+                    # 既に存在する場合はフレーム数を増加（３０を超えたら検出）
                     detected_areas[(x, y, w, h)] += 1
 
                 # 継続フレーム数が閾値を超えた場合
@@ -82,6 +84,7 @@ def process_video():
                 left_x = x
                 if left_x < min_left_x_local:
                     min_left_x_local = left_x
+        ###########################################################################
         # min_lift_xの値を更新
         min_left_x = min_left_x_local
 
@@ -100,6 +103,7 @@ def process_video():
         # ESCキーで終了
         if cv2.waitKey(30) & 0xFF == 27:
             break
+    #######################################################################################################
 
     # 動画キャプチャを解放し、OpenCVウィンドウを閉める
     cap.release()
