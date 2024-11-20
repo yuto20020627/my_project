@@ -10,15 +10,16 @@ cap = cv2.VideoCapture('video/IMG_2435_1.MOV')
 
 # グローバル変数（縦線の位置）
 max_right_x = 0
-
+print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 def process_video():
     global max_right_x
     # 背景差分法のセットアップ
     background_subtractor = cv2.createBackgroundSubtractorMOG2()
-
+    print("sssssssssssssssssssssssssssssssssss")
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
+            print("cap.read()===False")
             break
 
         # 背景差分で前景を抽出
@@ -29,7 +30,9 @@ def process_video():
 
         # 最も右側のX座標を更新
         max_right_x_local = 0
+        print("gggggggggggggggggggg")
         for cnt in contours:
+            print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
             x, y, w, h = cv2.boundingRect(cnt)
             if h > w and h > 50 and w > 30:  # 条件に合う輪郭をフィルタリング
                 right_x = x + w
@@ -48,14 +51,15 @@ def process_video():
         # ESCキーで終了
         if cv2.waitKey(30) & 0xFF == 27:
             break
+        print(f"Current max_right_x: {max_right_x}")
 
     cap.release()
     cv2.destroyAllWindows()
 
 # 縦線の位置をJSON形式で返す
-@app.route('/get_line_position')
-def get_line_position():
-    return jsonify({'line_position': max_right_x})
+@app.route('/get_bus_time')
+def get_bus_time():
+    return jsonify({'line': max_right_x})
 
 # HTMLページをレンダリング
 @app.route('/')

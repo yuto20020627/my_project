@@ -113,7 +113,7 @@ def get_bus_time():
 # HTMLページをレンダリング
 @app.route('/')
 def index():
-    return render_template('Queue_display.html')
+    return render_template('Queue_display_right.html')
 
 # 動画処理を別スレッドで実行
 thread = threading.Thread(target=process_video)
