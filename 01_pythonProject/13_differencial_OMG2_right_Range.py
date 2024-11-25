@@ -1,5 +1,5 @@
 #MOG2を利用した背景差分法
-#11_differecialにモルフォロジー変換を追加、MOG2のパラメータ調整
+#11_differencialにモルフォロジー変換を追加、MOG2のパラメータ調整
 #画像認識の範囲を指定
 import cv2
 import numpy as np
@@ -10,7 +10,7 @@ from flask import Flask, render_template, jsonify
 app = Flask(__name__)
 
 # 動画の読み込みまたはカメラを起動
-cap = cv2.VideoCapture('video/IMG_2435_1.MOV')
+cap = cv2.VideoCapture('video/IMG_2435_1.mov')
 
 #動画のフレームの幅(3)、高さ(4)を設定、出力
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

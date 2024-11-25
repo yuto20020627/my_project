@@ -39,6 +39,7 @@ print('幅：' + str(min_left_x) + '高さ：' + str(height))
 
 # バス待ち時間ページの情報を定期的に更新
 def process_video():
+
     global min_left_x
     # while文1フレームの処理##################################################################################
     while cap.isOpened():  # 動画が開かれているか
