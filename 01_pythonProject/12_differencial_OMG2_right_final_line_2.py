@@ -1,3 +1,8 @@
+#11_differencialをコピー
+#MOG2を利用した背景差分法
+#待ち時間表示が変化しすぎないように最後尾の確定ラインを作成
+#ヒストグラムを用いた確定線  
+
 import cv2
 import threading
 from flask import Flask, render_template, jsonify

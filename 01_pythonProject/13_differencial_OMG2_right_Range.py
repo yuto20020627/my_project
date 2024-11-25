@@ -1,5 +1,6 @@
 #MOG2を利用した背景差分法
 #11_differecialにモルフォロジー変換を追加、MOG2のパラメータ調整
+#画像認識の範囲を指定
 import cv2
 import numpy as np
 import threading
@@ -12,9 +13,12 @@ app = Flask(__name__)
 cap = cv2.VideoCapture('video/IMG_2435_1.MOV')
 
 #動画のフレームの幅(3)、高さ(4)を設定、出力
-min_left_x = cap.get(3)
-height = cap.get(4)
-print('幅：' + str(min_left_x) + '高さ：' + str(height))
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print('幅：' + str(frame_width) + ' 高さ：' + str(frame_height))
+
+# 任意の多角形エリアを設定
+polygon_points = np.array([[0, 616], [0, 570], [1042, 85], [1042, 616]])
 
 # グローバル変数（縦線の位置）
 max_right_x = 0
@@ -31,11 +35,20 @@ def process_video():
             print("cap.read()===False")
             break
 
+        # フレームと同じサイズの全黒マスクを作成
+        mask = np.zeros((frame_height, frame_width), dtype=np.uint8)
+
+        # マスクに多角形を描画（白色で塗りつぶし）
+        cv2.fillPoly(mask, [polygon_points], 255)
+
         # 背景差分でフレームに対する前景を抽出、背景：黒（０）、前景：白（２５５）
         fg_mask = background_subtractor.apply(frame)
 
         #モルフォロジー変換を用いたノイズ除去
         fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+
+        # マスクを適用して、指定エリア外の部分を黒くする
+        fg_mask = cv2.bitwise_and(fg_mask, mask)
 
         # 前景から輪郭の抽出
         contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -45,12 +58,16 @@ def process_video():
         # 1フレームでcontours(検出された輪郭の数)繰り返す####################
         for cnt in contours:
             x, y, w, h = cv2.boundingRect(cnt)
-            if h > w and h > 50 and w > 30:  # 条件に合う輪郭をフィルタリング
+            if h > w and h > 30 and w > 20:  # 条件に合う輪郭をフィルタリング
                 right_x = x + w #左端＋幅で右端の座標
                 if right_x > max_right_x_local:#１つのフレームで同時に2つ以上の人間を検出した際、最も右の人に線を引くため
                     max_right_x_local = right_x
         ################################################################
+
         max_right_x = max_right_x_local#今回のフレームでのmax_right_xの更新
+
+        # マスク範囲を緑色で描画
+        cv2.polylines(frame, [polygon_points], isClosed=True, color=(0, 255, 0), thickness=2)
 
         # 検出結果を描画
         if max_right_x > 0:
