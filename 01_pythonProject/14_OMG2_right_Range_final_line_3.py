@@ -2,6 +2,7 @@
 # 11_differencialにモルフォロジー変換を追加、MOG2のパラメータ調整
 # 画像認識の範囲を指定
 #常に最後尾の線が描写されるように変更
+#14_を改変しリストを使い誤差範囲を決める
 import cv2
 import numpy as np
 import threading
@@ -30,11 +31,13 @@ roi_area = np.array([[0, 616], [0, 510], [135, 510], [1042, 85], [1042, 616]])
 max_right_x = 0
 frame_count = 0
 last_max_right_x = 0
+position_history = []  # 青線位置の履歴
 
 def process_video():
     global max_right_x
     global frame_count
     global last_max_right_x
+    global position_history
 
     # 背景差分法のセットアップ、MOG2のセットアップ
     # history(500):背景モデルの更新回数　varThreshold(16):前景判断のしきい値　detectShadows(True):影の検出を有効にするか
@@ -79,12 +82,15 @@ def process_video():
         if max_right_x_local > 0:
             max_right_x = max_right_x_local# 今回のフレームでのmax_right_xの更新
         ######確定線の更新#################################
-            frame_count = 0 # カウントリセット
-        else:
-            frame_count = frame_count + 1
+            # 位置履歴に現在の位置を追加
+            position_history.append(max_right_x)
+            if len(position_history) > 20:
+                position_history.pop(0)  # 履歴を10フレーム分に制限
 
-        if frame_count >= 20 and max_right_x != frame_width:
-            last_max_right_x = max_right_x
+            # 確定線（赤線）の更新
+            if len(position_history) == 20 and max_right_x != frame_width and all(
+                    abs(position_history[i] - position_history[i + 1]) <= 1 for i in range(19)):
+                last_max_right_x = max_right_x  # 赤線の位置を更新
         ##################################################
         # マスク範囲を緑色で描画
         # cv2.polylines(画像名、[すべての頂点]、isClosed=始点と終点を結ぶか、color=（色）、thickness=線の太さ)

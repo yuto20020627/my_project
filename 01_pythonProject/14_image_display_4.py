@@ -1,14 +1,6 @@
-# MOG2を利用した背景差分法
-# 11_differencialにモルフォロジー変換を追加、MOG2のパラメータ調整
-# 画像認識の範囲を指定
-#常に最後尾の線が描写されるように変更
 import cv2
 import numpy as np
 import threading
-from flask import Flask, render_template, jsonify
-
-# Flaskアプリケーションのセットアップ
-app = Flask(__name__)
 
 # 動画の読み込み
 cap = cv2.VideoCapture('video/IMG_2435_1.mov')
@@ -30,11 +22,13 @@ roi_area = np.array([[0, 616], [0, 510], [135, 510], [1042, 85], [1042, 616]])
 max_right_x = 0
 frame_count = 0
 last_max_right_x = 0
+position_history = []  # 青線位置の履歴
 
 def process_video():
     global max_right_x
     global frame_count
     global last_max_right_x
+    global position_history
 
     # 背景差分法のセットアップ、MOG2のセットアップ
     # history(500):背景モデルの更新回数　varThreshold(16):前景判断のしきい値　detectShadows(True):影の検出を有効にするか
@@ -77,14 +71,17 @@ def process_video():
         ################################################################
         # 変更があれば今回のフレームでのmax_right_xの更新、なければ更新しない
         if max_right_x_local > 0:
-            max_right_x = max_right_x_local# 今回のフレームでのmax_right_xの更新
+            max_right_x = max_right_x_local  # 今回のフレームでのmax_right_xの更新
         ######確定線の更新#################################
-            frame_count = 0 # カウントリセット
-        else:
-            frame_count = frame_count + 1
+        # 位置履歴に現在の位置を追加
+        position_history.append(max_right_x)
+        if len(position_history) > 20:
+            position_history.pop(0)  # 履歴を20フレーム分に制限
 
-        if frame_count >= 20 and max_right_x != frame_width:
-            last_max_right_x = max_right_x
+        # 確定線（赤線）の更新
+        if len(position_history) == 20 and max_right_x != frame_width and all(
+                abs(position_history[i] - position_history[i + 1]) <= 1 for i in range(19)):
+            last_max_right_x = max_right_x  # 赤線の位置を更新
         ##################################################
         # マスク範囲を緑色で描画
         # cv2.polylines(画像名、[すべての頂点]、isClosed=始点と終点を結ぶか、color=（色）、thickness=線の太さ)
@@ -95,7 +92,6 @@ def process_video():
             # cv2.line(画像名、（始点）、（終点）、（色）、線の太さ)
             cv2.line(frame, (max_right_x, 0), (max_right_x, frame_height), (255, 0, 0), 2)
             cv2.line(frame, (last_max_right_x, 0), (last_max_right_x, frame_height), (0, 0, 255), 2)
-
 
         # 結果の表示(出力時の名前、画像名)
         cv2.imshow('Queue_Video', frame)
@@ -108,23 +104,11 @@ def process_video():
     cap.release()
     cv2.destroyAllWindows()
 
-
-# 縦線の位置をJSON形式で返す
-@app.route('/get_bus_time')
-def get_bus_time():
-    return jsonify({'line': max_right_x})
-
-
-# HTMLページをレンダリング
-@app.route('/')
-def index():
-    return render_template('Queue_display_right.html')
-
-
 # 動画処理を別スレッドで実行
 thread = threading.Thread(target=process_video)
 thread.daemon = True
 thread.start()
 
 if __name__ == '__main__':
-    app.run(threaded=True)
+    while True:
+        pass  # メインスレッドを維持して、動画処理が終了するのを待つ
