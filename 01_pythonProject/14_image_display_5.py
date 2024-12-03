@@ -6,10 +6,6 @@
 import cv2
 import numpy as np
 import threading
-from flask import Flask, render_template, jsonify
-
-# Flaskアプリケーションのセットアップ
-app = Flask(__name__)
 
 # 動画の読み込み
 cap = cv2.VideoCapture('video/IMG_2435_1.mov')
@@ -117,20 +113,11 @@ def process_video():
     cap.release()
     cv2.destroyAllWindows()
 
-# 縦線の位置をJSON形式で返す
-@app.route('/get_bus_time')
-def get_bus_time():
-    return jsonify({'line': last_max_right_x})
-
-# HTMLページをレンダリング
-@app.route('/')
-def index():
-    return render_template('Queue_display_right.html')
-
 # 動画処理を別スレッドで実行
 thread = threading.Thread(target=process_video)
 thread.daemon = True
 thread.start()
 
 if __name__ == '__main__':
-    app.run(threaded=True)
+    while True:
+        pass  # メインスレッドを維持して、動画処理が終了するのを待つ
