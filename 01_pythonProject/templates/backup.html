@@ -23,11 +23,6 @@
 
      <!-- JavaScriptの追加: バス待ち時間の更新機能 -->
     <script>
-        function convertToMinutes(busArrivalTime) {
-            const [hours, minutes] = busArrivalTime.split(':').map(Number); // 時と分を分割して整数に変換
-            return hours * 60 + minutes; // 時間を分に換算して合計を返す
-            }
-
         function updateBusTime() {
             // 現在の時間を取得して待ち時間を計算
 
@@ -38,8 +33,8 @@
                     const line = data.line;//縦線のX座標
                     const now = new Date();//現在の時刻
                     const people = 50 + Math.round(line / 50);//待ち人数line/10.小数点以下を四捨五入
-                    const busArrivalTime = data.next_buses['岡山理科大学']; //到着予定時刻(5分後)
-                    const minutesLeft = convertToMinutes(busArrivalTime) - (now.getHours() * 60 + now.getMinutes());//到着までの時間（分）（5分後）
+                    const busArrivalTime = new Date(now.getTime() + 5 * 60000); //到着予定時刻(5分後)
+                    const minutesLeft = Math.round((busArrivalTime - now) / 60000);//到着までの時間（分）（5分後）
                     const number = Math.ceil(people / 30);//バス1台を３０人として計算.小数点以下切り上げ
 
                     // 表示を更新
@@ -47,8 +42,8 @@
                     document.getElementById("line").textContent = (line === 0) ? "少々お待ちください":"最後尾までの長さ : " + line + "ピクセル　(50ピクセルに1人)";
                     document.getElementById("people").textContent = (line === 0) ? "少々お待ちください":"並んでいる予想人数 : " + people + "人　　　(画面外に50人並んでいる想定)";
                      document.getElementById("bus-number").textContent = (line === 0) ? "少々お待ちください":(number === 1) ? "あなたは次のバスで乗れます": "あなたが乗れるバスまで :  " + number + "台　 (1台30人で計算)";
-                    document.getElementById("expectation-time").textContent = "バスの到着予想時刻:" + busArrivalTime;
-                    document.getElementById("bus-time").textContent = "バスが来るまで " + minutesLeft + " 分";
+                    document.getElementById("expectation-time").textContent = "バスの到着予想時刻 " + "知らん、時刻表で確認してください(未実装)";
+                    document.getElementById("bus-time").textContent = "バスが来るまで " + minutesLeft + " 分ぐらいかな、しらんけど(未実装)";
 
                     //toLocaleTimeString()時刻のみを表示
                 });
