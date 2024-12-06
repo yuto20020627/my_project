@@ -33,7 +33,7 @@ roi_area = np.array([[0, 616], [0, 510], [135, 510], [1042, 85], [1042, 616]])
 max_right_x = 0
 frame_count = 0
 last_max_right_x = 0
-position_history = []  # 青線位置の履歴
+position_history = []
 
 def process_video():
     global max_right_x
@@ -74,7 +74,6 @@ def process_video():
         max_right_x_local = 0
         # 1フレームでcontours(検出された輪郭の数)繰り返す########################
         for cnt in contours:
-
             x, y, w, h = cv2.boundingRect(cnt)
             if h > 30 and w > 20:  # 条件に合う輪郭をフィルタリング
                 right_x = x + w  # 左端＋幅で右端の座標
@@ -87,7 +86,7 @@ def process_video():
         ######確定線の更新(2秒)#############################
         # 位置履歴に現在の位置を追加
         position_history.append(max_right_x) #.appendで配列の末尾に追加
-        if len(position_history) > 60: # 履歴を60フレーム分に制限
+        if len(position_history) > 60:
             position_history.pop(0)
 
         # 確定線の更新(過去60フレームの数値が誤差+-5なら更新)
