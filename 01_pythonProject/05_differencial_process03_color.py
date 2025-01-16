@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 動画の読み込みまたはカメラを起動
-cap = cv2.VideoCapture('video/ScreenRecording_10-25-2024 15-45-20_1.mov')  # または 0 でカメラ起動
+cap = cv2.VideoCapture('video/IMG_2435_1.mov')  # または 0 でカメラ起動
 
 # 背景差分法（基本的なMOG2を使用）
 background_subtractor = cv2.createBackgroundSubtractorMOG2()

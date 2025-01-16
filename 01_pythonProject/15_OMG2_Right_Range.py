@@ -1,3 +1,4 @@
+#改変厳禁
 # MOG2を利用した背景差分法
 # 11_differencialにモルフォロジー変換を追加、MOG2のパラメータ調整
 # 画像認識の範囲を指定
@@ -58,7 +59,7 @@ def process_video():
         # マスクに多角形を描画（多角形内を白色で塗りつぶし）
         cv2.fillPoly(mask, [roi_area], 255)
 
-        # 背景差分でフレームに対する前景を抽出、背景：黒（０）、前景：白（２５５）
+        # 背景差分でフレームに対する前景を抽出、背景：黒（０）、前景：白（２５５）必要
         fg_mask = background_subtractor.apply(frame)
 
         # モルフォロジー変換を用いたノイズ除去
@@ -67,7 +68,7 @@ def process_video():
         # マスクを適用して、指定エリア外の部分を黒くする
         fg_mask = cv2.bitwise_and(fg_mask, mask)
 
-        # 前景から輪郭の抽出
+        # 前景から輪郭の抽出　必要
         contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # 最も右側のX座標を更新
