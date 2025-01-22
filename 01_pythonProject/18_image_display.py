@@ -1,15 +1,8 @@
-#改変厳禁
-# MOG2を利用した背景差分法
-# 11_differencialにモルフォロジー変換を追加、MOG2のパラメータ調整
-# 画像認識の範囲を指定
-#常に最後尾の線が描写されるように変更
-#14_を改変しリストを使い誤差範囲を決める
+#14_3を改変
 import cv2
 import numpy as np
 import threading
 from flask import Flask, render_template, jsonify
-import json
-from datetime import datetime
 
 # Flaskアプリケーションのセットアップ
 app = Flask(__name__)
@@ -33,13 +26,13 @@ roi_area = np.array([[0, 616], [0, 510], [135, 510], [1042, 85], [1042, 616]])
 # グローバル変数（縦線の位置）
 max_right_x = 0
 frame_count = 0
-last_max_right_x = 0
-position_history = []
+confirmed_line_x = 0
+position_history = []  # 青線位置の履歴
 
 def process_video():
     global max_right_x
     global frame_count
-    global last_max_right_x
+    global confirmed_line_x
     global position_history
 
     # 背景差分法のセットアップ、MOG2のセットアップ
@@ -59,7 +52,7 @@ def process_video():
         # マスクに多角形を描画（多角形内を白色で塗りつぶし）
         cv2.fillPoly(mask, [roi_area], 255)
 
-        # 背景差分でフレームに対する前景を抽出、背景：黒（０）、前景：白（２５５）必要
+        # 背景差分でフレームに対する前景を抽出、背景：黒（０）、前景：白（２５５）
         fg_mask = background_subtractor.apply(frame)
 
         # モルフォロジー変換を用いたノイズ除去
@@ -68,7 +61,7 @@ def process_video():
         # マスクを適用して、指定エリア外の部分を黒くする
         fg_mask = cv2.bitwise_and(fg_mask, mask)
 
-        # 前景から輪郭の抽出　必要
+        # 前景から輪郭の抽出
         contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # 最も右側のX座標を更新
@@ -97,7 +90,7 @@ def process_video():
                 if abs(position_history[i] - position_history[0]) <= 5:
                     count = count + 1
             if count == 59:
-                last_max_right_x = max_right_x  # 赤線の位置を更新
+                confirmed_line_x = max_right_x  # 赤線の位置を更新
         ##################################################
         # マスク範囲を緑色で描画
         # cv2.polylines(画像名、[すべての頂点]、isClosed=始点と終点を結ぶか、color=（色）、thickness=線の太さ)
@@ -107,7 +100,7 @@ def process_video():
         if max_right_x > 0:
             # cv2.line(画像名、（始点）、（終点）、（色）、線の太さ)
             cv2.line(frame, (max_right_x, 0), (max_right_x, frame_height), (255, 0, 0), 2)
-            cv2.line(frame, (last_max_right_x, 0), (last_max_right_x, frame_height), (0, 0, 255), 2)
+            cv2.line(frame, (confirmed_line_x, 0), (confirmed_line_x, frame_height), (0, 0, 255), 2)
 
         # 結果の表示(出力時の名前、画像名)
         cv2.imshow('Queue_Video', frame)
@@ -120,42 +113,10 @@ def process_video():
     cap.release()
     cv2.destroyAllWindows()
 
-#バスの時刻表の表示
-def read_bus_schedule():
-    with open('bus_schedule.json', 'r', encoding='utf-8') as file:
-        schedule = json.load(file)
-    return schedule
-
-# 次のバス時刻を取得する関数
-def get_next_bus_time(times):
-    # 現在の時刻を文字型strでを出力し、#datetime型に変換
-    now = datetime.now().strftime('%H:%M')
-    now_time = datetime.strptime(now, '%H:%M')
-
-    # #scheduleのtimeをdatetime型に変換し、現在時刻以降の最も早い時刻を配列として取得
-    times = [datetime.strptime(time, '%H:%M') for time in times]
-    future_times = [time for time in times if time > now_time]
-
-    if future_times:
-        #配列の先頭(現在時刻以降の最も早い時刻)を返す
-        return future_times[0].strftime('%H:%M')
-    else:
-        # 次のバス時刻がなければNoneを返す
-        return None
-
 # 縦線の位置をJSON形式で返す
-@app.route('/get_bus_time')
-def get_bus_time():
-    bus_schedule = read_bus_schedule()
-    next_buses = {}
-    for bus_stop in bus_schedule["bus_stops"]:
-        next_time = get_next_bus_time(bus_stop["times"])
-        next_buses[bus_stop["stop"]] = next_time
-
-    return jsonify({
-        'line': last_max_right_x,
-        'next_buses': next_buses
-    })
+@app.route('/get_bus_line') #lineに変更
+def get_bus_line():
+    return jsonify({'line': confirmed_line_x}) #confirmed_line_xに変更
 
 # HTMLページをレンダリング
 @app.route('/')

@@ -32,7 +32,7 @@
             // 現在の時間を取得して待ち時間を計算
 
              // Pythonからのデータを取得
-            fetch('/get_bus_time')
+            fetch('/get_bus_line')//HTMLファイル
                 .then(response => response.json())
                 .then(data => {
                     const line = data.line;//縦線のX座標
