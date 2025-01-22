@@ -111,7 +111,7 @@ def process_video():
 
 #バスの時刻表の表示
 def read_bus_schedule():
-    with open('bus_schedule.json', 'r', encoding='utf-8') as file:
+    with open('bus_schedule.json') as file:
         return json.load(file)
 
 # 次のバス時刻を取得する関数
