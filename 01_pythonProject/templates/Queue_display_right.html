@@ -38,7 +38,7 @@
                     const line = data.line;//縦線のX座標
                     const now = new Date();//現在の時刻
                     const people = 50 + Math.round(line / 50);//待ち人数line/10.小数点以下を四捨五入
-                    const busArrivalTime = data.next_buses['岡山理科大学']; //到着予定時刻(5分後)
+                    const busArrivalTime = data.next_buses; //到着予定時刻(5分後)
                     const minutesLeft = convertToMinutes(busArrivalTime) - (now.getHours() * 60 + now.getMinutes());//到着までの時間（分）（5分後）
                     const number = Math.ceil(people / 30);//バス1台を３０人として計算.小数点以下切り上げ
 
