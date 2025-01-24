@@ -48,7 +48,7 @@
                     document.getElementById("people").textContent = (line === 0) ? "少々お待ちください":"並んでいる予想人数 : " + people + "人　　　(画面外に50人並んでいる想定)";
                      document.getElementById("bus-number").textContent = (line === 0) ? "少々お待ちください":(number === 1) ? "あなたは次のバスで乗れます": "あなたが乗れるバスまで :  " + number + "台　 (1台30人で計算)";
                     document.getElementById("expectation-time").textContent = "バスの到着予想時刻 : " + busArrivalTime;
-                    document.getElementById("bus-time").textContent = "バスが来るまで : " + minutesLeft + " 分";
+                    document.getElementById("bus-time").textContent = (next_buses === None) ? 本日の終電は終わりました:"バスが来るまで : " + minutesLeft + " 分";
 
                     //toLocaleTimeString()時刻のみを表示
                 });
