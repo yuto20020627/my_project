@@ -125,7 +125,7 @@ def get_next_bus_time(times):
         time = datetime.strptime(time_str, '%H:%M')
         if time >now:
             return time_str
-        # 次のバス時刻がなければNoneを返す
+        # 終電の時間が過ぎ、次のバス時刻がなければNoneを返す
     return None
 
 # 縦線の位置をJSON形式で返す
